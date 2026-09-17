@@ -230,3 +230,78 @@ h1 {
   color: #9aa0a6;
   font-style: italic;
 }
+
+/* --- tabs --- */
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #262a33;
+}
+
+.tab {
+  padding: 0.6rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #9aa0a6;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: #e6e6e6;
+  border-bottom-color: #d64545;
+}
+
+/* --- resume form --- */
+
+.resume-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.resume-upload {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.resume-upload-label {
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #3a3f4b;
+  background: #1a1d24;
+  color: #e6e6e6;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.resume-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.resume-upload-or {
+  color: #9aa0a6;
+  font-size: 0.85rem;
+}
+
+.resume-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #3a3f4b;
+  background: #1a1d24;
+  color: #e6e6e6;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
