@@ -96,6 +96,60 @@ export async function callGroqStructured({
   throw new Error(`Groq structured call failed after ${attempts} attempts: ${lastErr.message}`);
 }
 
+async function callChatOnce({ model, systemPrompt, messages, maxTokens }) {
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 429) {
+      const err = new Error(`Groq API error 429 (rate limited): ${body}`);
+      err.rateLimited = true;
+      throw err;
+    }
+    throw new Error(`Groq API error ${res.status}: ${body}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) {
+    throw new Error("Groq response contained no message content.");
+  }
+  return text;
+}
+
+// Plain-text chat completion (no JSON schema) for free-form conversation.
+export async function callGroqChat({
+  model = "openai/gpt-oss-120b",
+  systemPrompt,
+  messages,
+  maxTokens = 1200,
+  attempts = 3,
+}) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await callChatOnce({ model, systemPrompt, messages, maxTokens });
+    } catch (err) {
+      lastErr = err;
+      if (err.rateLimited && i < attempts - 1) {
+        await sleep(15000);
+      }
+    }
+  }
+  throw new Error(`Groq chat call failed after ${attempts} attempts: ${lastErr.message}`);
+}
+
 // Occasionally the model tries to close one array string and open the next
 // (`"...?","...?"`) but drops the array comma, fusing both items into one
 // string. Split on that pattern to recover the intended items.

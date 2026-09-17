@@ -2,6 +2,7 @@ import { useState } from "react";
 import RepoAnalyzer from "./RepoAnalyzer.jsx";
 import ResumeAnalyzer from "./ResumeAnalyzer.jsx";
 import PitchAnalyzer from "./PitchAnalyzer.jsx";
+import CalloutChat from "./CalloutChat.jsx";
 
 export default function App() {
   const [tab, setTab] = useState("repo");
@@ -33,11 +34,19 @@ export default function App() {
         >
           Pitch
         </button>
+        <button
+          type="button"
+          className={`tab ${tab === "callout" ? "active" : ""}`}
+          onClick={() => setTab("callout")}
+        >
+          Callout
+        </button>
       </div>
 
       {tab === "repo" && <RepoAnalyzer />}
       {tab === "resume" && <ResumeAnalyzer />}
       {tab === "pitch" && <PitchAnalyzer />}
+      {tab === "callout" && <CalloutChat />}
     </div>
   );
 }
