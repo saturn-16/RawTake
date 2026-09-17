@@ -1,4 +1,5 @@
 import { db } from "./index.js";
+import { createFollowupsForAnalysis } from "./critiqueFollowupRepository.js";
 
 function rowToVerdict(analysisRow, evidenceRows) {
   const critiques = evidenceRows
@@ -35,8 +36,8 @@ const insertAnalysisStmt = db.prepare(`
 `);
 
 const insertEvidenceStmt = db.prepare(`
-  INSERT INTO evidence (analysis_id, kind, dimension, claim, citation, severity, confidence)
-  VALUES (@analysisId, @kind, @dimension, @claim, @citation, @severity, @confidence)
+  INSERT INTO evidence (analysis_id, module, kind, dimension, claim, citation, severity, confidence)
+  VALUES (@analysisId, 'repo', @kind, @dimension, @claim, @citation, @severity, @confidence)
 `);
 
 const getAnalysisByIdStmt = db.prepare(`SELECT * FROM analyses WHERE id = ?`);
@@ -66,8 +67,9 @@ export function insertAnalysis({ repoUrl, owner, repo, verdict, status = "active
   });
   const analysisId = Number(info.lastInsertRowid);
 
+  const newCritiqueEvidenceIds = [];
   for (const c of verdict.critiques || []) {
-    insertEvidenceStmt.run({
+    const evidenceInfo = insertEvidenceStmt.run({
       analysisId,
       kind: "critique",
       dimension: c.dimension,
@@ -76,6 +78,7 @@ export function insertAnalysis({ repoUrl, owner, repo, verdict, status = "active
       severity: c.severity,
       confidence: c.confidence,
     });
+    newCritiqueEvidenceIds.push(Number(evidenceInfo.lastInsertRowid));
   }
   for (const p of verdict.positives || []) {
     insertEvidenceStmt.run({
@@ -88,12 +91,35 @@ export function insertAnalysis({ repoUrl, owner, repo, verdict, status = "active
       confidence: p.confidence,
     });
   }
+  createFollowupsForAnalysis(newCritiqueEvidenceIds);
 
   return analysisId;
 }
 
+// Most recent analysis for this repo URL (active or superseded — supersession
+// always produces a strictly newer row, so MAX(created_at) is naturally the
+// current tip). Used to detect "this is a re-check of prior work" on a fresh
+// POST /repo submission — deliberately not used by the dispute flow, since a
+// pushback-driven revision is a different thing from the user coming back
+// later having actually changed the repo.
+const findMostRecentAnalysisByRepoUrlStmt = db.prepare(
+  `SELECT * FROM analyses WHERE repo_url = ? ORDER BY created_at DESC LIMIT 1`
+);
+
+export function findMostRecentAnalysisByRepoUrl(repoUrl) {
+  return findMostRecentAnalysisByRepoUrlStmt.get(repoUrl);
+}
+
 export function getAnalysisById(id) {
   return getAnalysisByIdStmt.get(id);
+}
+
+const listActiveAnalysesStmt = db.prepare(
+  `SELECT id, owner, repo, created_at FROM analyses WHERE status = 'active' ORDER BY created_at DESC`
+);
+
+export function listActiveAnalyses() {
+  return listActiveAnalysesStmt.all();
 }
 
 export function getAnalysisWithVerdict(id) {

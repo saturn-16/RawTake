@@ -1,13 +1,18 @@
 import { Router } from "express";
 import { analyzeRepoData } from "../services/github.js";
-import { generateVerdict } from "../services/groq.js";
+import { generateVerdict, buildRepoContextMessage } from "../services/groq.js";
 import { classifyPushback, reevaluateVerdict } from "../services/dispute.js";
+import { generateSecondOpinion } from "../services/secondOpinionAnalysis.js";
+import { insertSecondOpinion } from "../db/secondOpinionRepository.js";
+import { runFollowupChecks, summarizeTrackRecord } from "../services/followupChecker.js";
 import {
   insertAnalysis,
   getLatestAnalysis,
   supersedeAnalysis,
   insertDispute,
   getDisputeHistory,
+  listActiveAnalyses,
+  findMostRecentAnalysisByRepoUrl,
 } from "../db/repository.js";
 
 export const analyzeRouter = Router();
@@ -19,6 +24,8 @@ analyzeRouter.post("/repo", async (req, res) => {
   }
 
   try {
+    const priorAnalysis = findMostRecentAnalysisByRepoUrl(repoUrl);
+
     const repoData = await analyzeRepoData(repoUrl);
     const verdict = await generateVerdict(repoData);
     const analysisId = insertAnalysis({
@@ -27,11 +34,32 @@ analyzeRouter.post("/repo", async (req, res) => {
       repo: repoData.repo,
       verdict,
     });
-    res.json({ analysisId, repo: `${repoData.owner}/${repoData.repo}`, verdict });
+
+    let trackRecord = { isRecheck: false };
+    if (priorAnalysis) {
+      const results = await runFollowupChecks({
+        priorAnalysisId: priorAnalysis.id,
+        module: "repo",
+        newEvidenceText: buildRepoContextMessage(repoData),
+        newAnalysisId: analysisId,
+      });
+      trackRecord = summarizeTrackRecord(results);
+    }
+
+    res.json({ analysisId, repo: `${repoData.owner}/${repoData.repo}`, verdict, trackRecord });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+});
+
+analyzeRouter.get("/repo", (_req, res) => {
+  const analyses = listActiveAnalyses().map((a) => ({
+    id: a.id,
+    label: `${a.owner}/${a.repo}`,
+    createdAt: a.created_at,
+  }));
+  res.json({ analyses });
 });
 
 analyzeRouter.get("/repo/:id/disputes", (req, res) => {
@@ -56,6 +84,42 @@ analyzeRouter.get("/repo/:id/disputes", (req, res) => {
   }));
 
   res.json({ analysisId: latest.row.id, verdict: latest.verdict, disputes: history });
+});
+
+analyzeRouter.post("/repo/:id/second-opinion", async (req, res) => {
+  const analysisId = Number(req.params.id);
+  const { pastedResponse } = req.body || {};
+
+  if (!Number.isInteger(analysisId)) {
+    return res.status(400).json({ error: "Invalid analysis id." });
+  }
+  if (!pastedResponse || typeof pastedResponse !== "string" || !pastedResponse.trim()) {
+    return res.status(400).json({ error: "pastedResponse is required." });
+  }
+
+  const latest = getLatestAnalysis(analysisId);
+  if (!latest) {
+    return res.status(404).json({ error: "Analysis not found." });
+  }
+
+  try {
+    // Re-fetch live from GitHub rather than relying on stored critique rows,
+    // so the fact-check is against the actual repo, not RawTake's own past
+    // interpretation of it.
+    const repoData = await analyzeRepoData(latest.row.repo_url);
+    const evidenceText = buildRepoContextMessage(repoData);
+    const verdict = await generateSecondOpinion(evidenceText, pastedResponse);
+    insertSecondOpinion({
+      module: "repo",
+      analysisId: latest.row.id,
+      pastedResponse,
+      verdict,
+    });
+    res.json({ verdict });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 function verdictSignature(verdict) {

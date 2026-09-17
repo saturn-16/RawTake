@@ -5,9 +5,15 @@ const insertConversationStmt = db.prepare(
   `INSERT INTO conversations (title) VALUES (?)`
 );
 const getConversationStmt = db.prepare(`SELECT * FROM conversations WHERE id = ?`);
-const listConversationsStmt = db.prepare(
-  `SELECT * FROM conversations ORDER BY created_at DESC`
-);
+// Only conversations with at least one message — a conversation row can
+// still end up empty (e.g. the create call succeeds but the first message
+// send fails), so this filters defensively rather than relying solely on
+// the frontend never creating one speculatively.
+const listConversationsStmt = db.prepare(`
+  SELECT c.* FROM conversations c
+  WHERE EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id)
+  ORDER BY c.created_at DESC
+`);
 const setConversationTitleStmt = db.prepare(
   `UPDATE conversations SET title = ? WHERE id = ?`
 );

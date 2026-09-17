@@ -31,7 +31,8 @@ h1 {
   margin: 1.5rem 0;
 }
 
-.form input {
+.form input,
+.form select {
   flex: 1;
   padding: 0.75rem;
   border-radius: 6px;
@@ -380,4 +381,88 @@ h1 {
   font-size: 0.95rem;
   font-family: inherit;
   resize: vertical;
+}
+
+/* --- second opinion box --- */
+
+.second-opinion-box {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #262a33;
+}
+
+.second-opinion-toggle {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #3a3f4b;
+  background: #1a1d24;
+  color: #e6e6e6;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.second-opinion-body {
+  margin-top: 1rem;
+}
+
+/* --- track record --- */
+
+.track-record {
+  margin-bottom: 1.75rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #1a1d24;
+  border: 1px solid #3a3f4b;
+}
+
+.track-record-tally {
+  font-weight: 600;
+  margin: 0.25rem 0 1rem;
+}
+
+.track-record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.track-record-item {
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #3a3f4b;
+  background: #12141a;
+}
+
+.track-record-item.resolved {
+  border-left-color: #6bff8f;
+}
+
+.track-record-item.partially_resolved {
+  border-left-color: #ffd36b;
+}
+
+.track-record-item.unresolved {
+  border-left-color: #ff6b6b;
+}
+
+.track-record-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #9aa0a6;
+}
+
+.track-record-claim {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.track-record-note {
+  color: #c7cad1;
+  font-size: 0.9rem;
 }

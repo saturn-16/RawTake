@@ -10,26 +10,36 @@ export default function CalloutChat() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    fetch("/api/callout/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
-      .then((res) => res.json())
-      .then((data) => setConversationId(data.conversationId))
-      .catch((err) => setError(err.message));
-  }, []);
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!input.trim() || !conversationId) return;
+    if (!input.trim()) return;
     const userText = input;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userText }]);
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/callout/conversations/${conversationId}/messages`, {
+      // The conversation row is only created here, on the first real message
+      // — not speculatively on mount — so browsing to this tab and leaving
+      // doesn't litter the DB (and the Second Opinion dropdown) with empty
+      // conversations.
+      let id = conversationId;
+      if (!id) {
+        const convRes = await fetch("/api/callout/conversations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        const convData = await convRes.json();
+        if (!convRes.ok) throw new Error(convData.error || "Couldn't start a conversation.");
+        id = convData.conversationId;
+        setConversationId(id);
+      }
+
+      const res = await fetch(`/api/callout/conversations/${id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userText }),
@@ -86,9 +96,9 @@ export default function CalloutChat() {
           placeholder="Is this a good idea? X or Y?"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={loading || !conversationId}
+          disabled={loading}
         />
-        <button type="submit" disabled={loading || !input.trim() || !conversationId}>
+        <button type="submit" disabled={loading || !input.trim()}>
           {loading ? "..." : "Send"}
         </button>
       </form>

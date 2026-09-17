@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { VerdictBody } from "./components/shared.jsx";
+import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
 
 function DisputeHistory({ disputes }) {
   const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function RepoAnalyzer() {
   const [analysisId, setAnalysisId] = useState(null);
   const [repoName, setRepoName] = useState(null);
   const [verdict, setVerdict] = useState(null);
+  const [trackRecord, setTrackRecord] = useState(null);
   const [previousVerdict, setPreviousVerdict] = useState(null);
   const [lastOutcome, setLastOutcome] = useState(null);
   const [disputeHistory, setDisputeHistory] = useState([]);
@@ -52,6 +54,7 @@ export default function RepoAnalyzer() {
     setAnalysisId(null);
     setRepoName(null);
     setVerdict(null);
+    setTrackRecord(null);
     setPreviousVerdict(null);
     setLastOutcome(null);
     setDisputeHistory([]);
@@ -66,6 +69,7 @@ export default function RepoAnalyzer() {
       setAnalysisId(data.analysisId);
       setRepoName(data.repo);
       setVerdict(data.verdict);
+      setTrackRecord(data.trackRecord);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -131,6 +135,8 @@ export default function RepoAnalyzer() {
       {verdict && (
         <div className="result">
           <h2>{repoName}</h2>
+
+          <TrackRecordSummary trackRecord={trackRecord} />
 
           {previousVerdict && (
             <div className="superseded-verdict">
