@@ -1,6 +1,7 @@
 import { useState } from "react";
 import RepoAnalyzer from "./RepoAnalyzer.jsx";
 import ResumeAnalyzer from "./ResumeAnalyzer.jsx";
+import PitchAnalyzer from "./PitchAnalyzer.jsx";
 
 export default function App() {
   const [tab, setTab] = useState("repo");
@@ -25,9 +26,18 @@ export default function App() {
         >
           Resume
         </button>
+        <button
+          type="button"
+          className={`tab ${tab === "pitch" ? "active" : ""}`}
+          onClick={() => setTab("pitch")}
+        >
+          Pitch
+        </button>
       </div>
 
-      {tab === "repo" ? <RepoAnalyzer /> : <ResumeAnalyzer />}
+      {tab === "repo" && <RepoAnalyzer />}
+      {tab === "resume" && <ResumeAnalyzer />}
+      {tab === "pitch" && <PitchAnalyzer />}
     </div>
   );
 }
