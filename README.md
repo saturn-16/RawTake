@@ -1,8 +1,37 @@
+<div align="center">
+
 # RawTake
 
-**No flattery. No hedging. Just the truth.**
+![License](https://img.shields.io/badge/license-MIT-e0332a?style=flat-square&labelColor=1a1a1a)
+![Node](https://img.shields.io/badge/node-%3E%3D18-e0332a?style=flat-square&labelColor=1a1a1a&logo=node.js&logoColor=e0332a)
+![React](https://img.shields.io/badge/react-18-e0332a?style=flat-square&labelColor=1a1a1a&logo=react&logoColor=e0332a)
+![SQLite](https://img.shields.io/badge/sqlite-vec-e0332a?style=flat-square&labelColor=1a1a1a&logo=sqlite&logoColor=e0332a)
+![Status](https://img.shields.io/badge/status-active%20development-e0332a?style=flat-square&labelColor=1a1a1a)
+
+*No flattery. No hedging. Just the truth.*
+
+</div>
 
 RawTake is an AI feedback tool that refuses to be nice about it. Paste in a GitHub repo, a resume, a project pitch, or an opinion from another AI, and it gives you a verdict — not a vibe, not a "great start, but here are some thoughts," an actual verdict — cited against real evidence, and willing to hold its ground when you push back.
+
+<div align="center">
+
+<img src="docs/screenshots/verdict.png" alt="RawTake verdict reveal: weakest point stamped, cited critiques, comprehension questions, and a dispute box" width="720">
+
+*A completed verdict — receipts attached, nothing softened.*
+
+</div>
+
+## Table of Contents
+
+- [Why this exists](#why-this-exists)
+- [What it actually does](#what-it-actually-does)
+- [Architecture](#architecture)
+- [The stack, and why](#the-stack-and-why)
+- [Running it locally](#running-it-locally)
+- [Project layout](#project-layout)
+- [What this is not (yet)](#what-this-is-not-yet)
+- [License](#license)
 
 ---
 
@@ -80,6 +109,16 @@ Every analysis is a straight line: **fetch real evidence → hand it to the mode
 
 ---
 
+<div align="center">
+
+<img src="docs/screenshots/landing.png" alt="RawTake landing screen with the ember background, module switcher, and persona picker" width="720">
+
+*The input screen — the ember texture and mechanical tab switcher disappear the moment a verdict lands.*
+
+</div>
+
+---
+
 ## Running it locally
 
 You'll need three free-tier API keys — Groq, Voyage AI, and (optionally) a GitHub personal access token for a higher rate limit.
@@ -129,3 +168,11 @@ Single-session, single-user by design — there's no auth layer, and the SQLite 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+<div align="center">
+
+---
+
+Built by **Gaurav Kumar** · [GitHub](https://github.com/saturn-16) · [gk16122004@gmail.com](mailto:gk16122004@gmail.com)
+
+</div>
