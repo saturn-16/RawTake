@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { VerdictBody } from "./components/shared.jsx";
 import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
 import { PersonaSelector, PersonaBadge } from "./components/PersonaSelector.jsx";
+import LoadingScanner from "./components/LoadingScanner.jsx";
+import VerdictReveal from "./components/VerdictReveal.jsx";
+import LatticeLoader from "./components/reactbits/LatticeLoader.jsx";
+import { usePrefersReducedMotion } from "./hooks/usePrefersReducedMotion.js";
 
 function DisputeHistory({ disputes }) {
   const [open, setOpen] = useState(false);
@@ -31,7 +36,8 @@ function DisputeHistory({ disputes }) {
   );
 }
 
-export default function RepoAnalyzer() {
+export default function RepoAnalyzer({ onHasResultChange }) {
+  const reducedMotion = usePrefersReducedMotion();
   const [repoUrl, setRepoUrl] = useState("");
   const [persona, setPersona] = useState("technical");
   const [loading, setLoading] = useState(false);
@@ -40,14 +46,21 @@ export default function RepoAnalyzer() {
   const [analysisId, setAnalysisId] = useState(null);
   const [repoName, setRepoName] = useState(null);
   const [verdict, setVerdict] = useState(null);
+  const [revealKey, setRevealKey] = useState(0);
   const [trackRecord, setTrackRecord] = useState(null);
   const [previousVerdict, setPreviousVerdict] = useState(null);
   const [lastOutcome, setLastOutcome] = useState(null);
   const [disputeHistory, setDisputeHistory] = useState([]);
+  const [heldPulseKey, setHeldPulseKey] = useState(0);
 
   const [disputeMessage, setDisputeMessage] = useState("");
-  const [disputeLoading, setDisputeLoading] = useState(false);
+  const [disputeStatus, setDisputeStatus] = useState("idle"); // idle | working | done | error
+  const disputeLoading = disputeStatus === "working";
   const [disputeError, setDisputeError] = useState(null);
+
+  useEffect(() => {
+    onHasResultChange?.(!!verdict);
+  }, [verdict, onHasResultChange]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -71,6 +84,7 @@ export default function RepoAnalyzer() {
       setAnalysisId(data.analysisId);
       setRepoName(data.repo);
       setVerdict(data.verdict);
+      setRevealKey((k) => k + 1);
       setTrackRecord(data.trackRecord);
     } catch (err) {
       setError(err.message);
@@ -82,7 +96,7 @@ export default function RepoAnalyzer() {
   async function handleDispute(e) {
     e.preventDefault();
     if (!disputeMessage.trim()) return;
-    setDisputeLoading(true);
+    setDisputeStatus("working");
     setDisputeError(null);
     try {
       const res = await fetch(`/api/analyze/repo/${analysisId}/dispute`, {
@@ -96,6 +110,9 @@ export default function RepoAnalyzer() {
       if (!data.verdictHeld) {
         setPreviousVerdict(verdict);
         setVerdict(data.verdict);
+        setRevealKey((k) => k + 1);
+      } else {
+        setHeldPulseKey((k) => k + 1);
       }
       setLastOutcome({
         classification: data.classification,
@@ -104,6 +121,7 @@ export default function RepoAnalyzer() {
         verdictHeld: data.verdictHeld,
       });
       setDisputeMessage("");
+      setDisputeStatus("done");
 
       const historyRes = await fetch(`/api/analyze/repo/${analysisId}/disputes`);
       const historyData = await historyRes.json();
@@ -112,8 +130,7 @@ export default function RepoAnalyzer() {
       }
     } catch (err) {
       setDisputeError(err.message);
-    } finally {
-      setDisputeLoading(false);
+      setDisputeStatus("error");
     }
   }
 
@@ -136,6 +153,8 @@ export default function RepoAnalyzer() {
 
       {error && <div className="error">{error}</div>}
 
+      {loading && <LoadingScanner label="CROSS-EXAMINING REPOSITORY..." />}
+
       {verdict && (
         <div className="result">
           <h2>{repoName}</h2>
@@ -144,7 +163,12 @@ export default function RepoAnalyzer() {
           <TrackRecordSummary trackRecord={trackRecord} />
 
           {previousVerdict && (
-            <div className="superseded-verdict">
+            <motion.div
+              className="superseded-verdict"
+              initial={reducedMotion ? false : { opacity: 0, scale: 1.02 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
               <div className="superseded-label">Previous verdict (superseded)</div>
               <div className="superseded-body">
                 <VerdictBody
@@ -153,14 +177,25 @@ export default function RepoAnalyzer() {
                   trustValue={previousVerdict.verdict.wouldTrustForPlacement}
                 />
               </div>
-            </div>
+            </motion.div>
           )}
 
-          <VerdictBody
-            verdict={verdict}
-            trustLabel="Would trust for placement"
-            trustValue={verdict.verdict.wouldTrustForPlacement}
-          />
+          <motion.div
+            key={`held-${heldPulseKey}`}
+            animate={
+              heldPulseKey > 0 && !reducedMotion
+                ? { boxShadow: ["0 0 0 0 rgba(224,51,42,0)", "0 0 0 6px rgba(224,51,42,0.35)", "0 0 0 0 rgba(224,51,42,0)"] }
+                : {}
+            }
+            transition={{ duration: 0.6 }}
+          >
+            <VerdictReveal
+              key={revealKey}
+              verdict={verdict}
+              trustLabel="Would trust for placement"
+              trustValue={verdict.verdict.wouldTrustForPlacement}
+            />
+          </motion.div>
 
           {lastOutcome && (
             <div className={`dispute-outcome ${lastOutcome.verdictHeld ? "held" : "revised"}`}>
@@ -188,8 +223,18 @@ export default function RepoAnalyzer() {
                 {disputeLoading ? "..." : "Dispute"}
               </button>
             </form>
-            {disputeLoading && (
-              <p className="dispute-loading">Checking your claim against the repo...</p>
+            {disputeStatus !== "idle" && (
+              <LatticeLoader
+                status={disputeStatus}
+                label="Weighing"
+                doneLabel="Verdict held in"
+                errorLabel="Classification failed after"
+                color="#f2f1ed"
+                doneColor="#3b82c4"
+                errorColor="#e0332a"
+                cellSize={6}
+                fontSize={13}
+              />
             )}
             {disputeError && <div className="error">{disputeError}</div>}
           </section>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function CalloutChat() {
+export default function CalloutChat({ onHasResultChange }) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -12,6 +12,10 @@ export default function CalloutChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    onHasResultChange?.(messages.length > 0);
+  }, [messages.length, onHasResultChange]);
 
   async function handleSubmit(e) {
     e.preventDefault();

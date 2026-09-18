@@ -3,7 +3,7 @@ import { VerdictBody } from "./components/shared.jsx";
 import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
 import { PersonaSelector, PersonaBadge } from "./components/PersonaSelector.jsx";
 
-export default function ResumeAnalyzer() {
+export default function ResumeAnalyzer({ onHasResultChange }) {
   const [resumeText, setResumeText] = useState("");
   const [targetRole, setTargetRole] = useState("");
   const [persona, setPersona] = useState("technical");
@@ -22,6 +22,10 @@ export default function ResumeAnalyzer() {
       .then((data) => setPriorAnalyses(data.analyses || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    onHasResultChange?.(!!verdict);
+  }, [verdict, onHasResultChange]);
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0];

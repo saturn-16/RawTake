@@ -1,28 +1,118 @@
+:root {
+  --bg: #08090b;
+  --bg-elevated: #131417;
+  --bg-inset: #0e0f12;
+  --border: #2a2c31;
+  --border-strong: #45484f;
+  --text-primary: #f2f1ed;
+  --text-secondary: #9a9a9e;
+
+  --verdict-red: #e0332a;
+  --verdict-red-dim: #7a1f1a;
+  --evidence-blue: #3b82c4;
+  --evidence-blue-dim: #1f3b52;
+  --warning-amber: #d99a30;
+  --warning-amber-dim: #4a3a1a;
+
+  --font-display: "Archivo", sans-serif;
+  --font-stamp: "Archivo Black", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "Roboto Mono", monospace;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0f1115;
-  color: #e6e6e6;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
 }
 
 .app {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
   padding: 3rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Fixed to the viewport (not the page), so it stays put and covers the
+   full screen regardless of how tall the page content grows — a single
+   instance lives at the app root, not per-section. */
+.input-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-family: var(--font-stamp);
+  font-size: 2.75rem;
+  letter-spacing: -0.01em;
   margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.fuzzy-heading canvas {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.github-link {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.github-link:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+}
+
+.result h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .tagline {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   margin-top: 0;
+}
+
+.header-tagline {
+  text-align: center;
 }
 
 .form {
@@ -32,83 +122,206 @@ h1 {
 }
 
 .form input,
-.form select {
+.form select,
+.resume-form textarea {
   flex: 1;
   padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #3a3f4b;
-  background: #1a1d24;
-  color: #e6e6e6;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+  color: var(--text-primary);
   font-size: 1rem;
+  font-family: var(--font-body);
+  transition: border-color 100ms ease;
+}
+
+.form input:focus,
+.form select:focus,
+.resume-form textarea:focus {
+  outline: none;
+  border-color: var(--verdict-red);
 }
 
 .form button {
-  padding: 0.75rem 1.25rem;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 2px;
   border: none;
-  background: #d64545;
-  color: white;
-  font-weight: 600;
+  background: var(--verdict-red);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: transform 100ms ease, background 100ms ease;
+}
+
+.form button:hover:not(:disabled) {
+  background: #f0453b;
+  transform: translateY(-1px);
 }
 
 .form button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: default;
+  transform: none;
 }
 
 .error {
-  color: #ff6b6b;
+  color: var(--text-primary);
+  background: var(--verdict-red-dim);
+  border-left: 3px solid var(--verdict-red);
+  padding: 0.6rem 0.9rem;
   margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
 }
 
 .result section {
   margin-bottom: 1.75rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid #262a33;
+  border-bottom: 1px solid var(--border);
 }
+
+/* --- weakest point (static/global styling; Repo gets the animated stamp) --- */
 
 .weakest {
-  background: #2a1414;
-  border: 1px solid #4a1f1f;
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--verdict-red);
+  border-radius: 2px;
+  padding: 1.1rem 1.25rem;
 }
 
-.critique {
+.weakest p {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* --- verdict summary --- */
+
+.verdict p {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+
+.trust-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  border: 2px solid currentColor;
+}
+
+.trust-badge.yes {
+  color: var(--evidence-blue);
+  background: var(--evidence-blue-dim);
+}
+
+.trust-badge.no {
+  color: var(--verdict-red);
+  background: var(--verdict-red-dim);
+}
+
+/* --- evidence entries (critiques / positives) --- */
+
+.critiques ul,
+.positives ul,
+.comprehension ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.comprehension ol {
+  counter-reset: q;
+}
+
+.comprehension li {
+  counter-increment: q;
+  margin-bottom: 0.6rem;
+  padding-left: 1.75rem;
+  position: relative;
+  color: var(--text-secondary);
+}
+
+.comprehension li::before {
+  content: counter(q);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--verdict-red);
+}
+
+.critique,
+.positive-entry {
   margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: #1a1d24;
-  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--verdict-red);
+  border-radius: 2px;
+}
+
+.positive-entry {
+  border-left-color: var(--evidence-blue);
+}
+
+.critique-claim,
+.positive-claim {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
 }
 
 .critique-citation {
-  font-family: monospace;
-  font-size: 0.85rem;
-  color: #9aa0a6;
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-inset);
+  border-left: 2px solid var(--border-strong);
+  padding: 0.4rem 0.6rem;
+  margin-top: 0.5rem;
 }
 
 .critique-severity {
-  margin-top: 0.35rem;
+  margin-top: 0.5rem;
   font-style: italic;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
 }
 
 .confidence {
   display: inline-block;
-  margin-top: 0.4rem;
-  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding: 0.15rem 0.5rem;
-  border-radius: 999px;
+  border-radius: 2px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  background: transparent;
 }
 
-.confidence-high {
-  background: #1f4a2a;
-  color: #6bff8f;
-}
-
-.confidence-low {
-  background: #4a3f1f;
-  color: #ffd36b;
+.confidence-low,
+.confidence-medium {
+  border-style: dashed;
 }
 
 /* --- superseded (pre-revision) verdict --- */
@@ -116,22 +329,24 @@ h1 {
 .superseded-verdict {
   margin-bottom: 1.75rem;
   padding: 1rem;
-  border: 1px dashed #3a3f4b;
-  border-radius: 8px;
-  opacity: 0.55;
+  border: 1px dashed var(--border-strong);
+  border-radius: 2px;
+  opacity: 0.5;
 }
 
 .superseded-label {
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #9aa0a6;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
   margin-bottom: 0.75rem;
 }
 
 .superseded-body {
   text-decoration: line-through;
-  text-decoration-color: #6a6f7b;
+  text-decoration-color: var(--verdict-red);
+  text-decoration-thickness: 2px;
 }
 
 .superseded-body section {
@@ -145,36 +360,40 @@ h1 {
 .dispute-outcome {
   margin-bottom: 1.75rem;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 2px;
 }
 
 .dispute-outcome p {
   margin: 0.35rem 0 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .dispute-outcome-label {
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-weight: 800;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .dispute-outcome.held {
-  background: #1a1d24;
-  border: 1px solid #3a3f4b;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
 }
 
 .dispute-outcome.held .dispute-outcome-label {
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .dispute-outcome.revised {
-  background: #1a2a1f;
-  border: 1px solid #2f5a3f;
+  background: var(--evidence-blue-dim);
+  border: 1px solid var(--evidence-blue);
 }
 
 .dispute-outcome.revised .dispute-outcome-label {
-  color: #6bff8f;
+  color: var(--evidence-blue);
 }
 
 /* --- dispute history --- */
@@ -186,7 +405,8 @@ h1 {
 .dispute-history-toggle {
   background: none;
   border: none;
-  color: #9aa0a6;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   cursor: pointer;
   padding: 0;
@@ -201,24 +421,26 @@ h1 {
 
 .dispute-history-item {
   padding: 0.6rem 0.75rem;
-  border-radius: 6px;
+  border-radius: 2px;
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
-  border-left: 3px solid #3a3f4b;
-  background: #1a1d24;
+  border-left: 3px solid var(--border-strong);
+  background: var(--bg-elevated);
 }
 
 .dispute-history-item.revised {
-  border-left-color: #6bff8f;
+  border-left-color: var(--evidence-blue);
 }
 
 .dispute-history-message {
-  color: #c7cad1;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
+  font-style: italic;
 }
 
 .dispute-history-outcome {
-  color: #9aa0a6;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
 }
 
 /* --- dispute input box --- */
@@ -227,34 +449,50 @@ h1 {
   border-bottom: none !important;
 }
 
+.dispute-box h3 {
+  color: var(--verdict-red);
+}
+
 .dispute-loading {
-  color: #9aa0a6;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
   font-style: italic;
 }
 
-/* --- tabs --- */
-
-.tabs {
+.weighing-indicator {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #262a33;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
 }
 
-.tab {
-  padding: 0.6rem 1rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: #9aa0a6;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
+.lattice-loader {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.5rem;
 }
 
-.tab.active {
-  color: #e6e6e6;
-  border-bottom-color: #d64545;
+/* --- tabs (JellyRadio module switcher) --- */
+
+.module-tabs {
+  display: flex !important;
+  width: fit-content;
+  margin: 0 auto 1.5rem !important;
+  padding: 0.35rem !important;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+}
+
+.module-tabs .jelly-radio__skin {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.78rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 /* --- resume form --- */
@@ -274,10 +512,11 @@ h1 {
 
 .resume-upload-label {
   padding: 0.5rem 0.9rem;
-  border-radius: 6px;
-  border: 1px solid #3a3f4b;
-  background: #1a1d24;
-  color: #e6e6e6;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -291,7 +530,7 @@ h1 {
 }
 
 .resume-upload-or {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
@@ -309,50 +548,51 @@ h1 {
 }
 
 .callout-empty {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
 .callout-bubble {
   max-width: 80%;
   padding: 0.65rem 0.9rem;
-  border-radius: 10px;
+  border-radius: 2px;
   line-height: 1.4;
   white-space: pre-wrap;
 }
 
 .callout-bubble.user {
   align-self: flex-end;
-  background: #d64545;
-  color: white;
+  background: var(--verdict-red);
+  color: var(--text-primary);
 }
 
 .callout-bubble.assistant {
   align-self: flex-start;
-  background: #1a1d24;
-  border: 1px solid #3a3f4b;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
 }
 
 .callout-bubble.loading {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
 .callout-retrieved {
   margin-bottom: 1rem;
   padding: 0.75rem;
-  border-radius: 8px;
-  background: #1a1d24;
-  border: 1px solid #3a3f4b;
+  border-radius: 2px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   font-size: 0.85rem;
 }
 
 .callout-retrieved-label {
-  color: #9aa0a6;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
 }
 
 .callout-retrieved ul {
@@ -363,24 +603,12 @@ h1 {
 
 .callout-retrieved li {
   margin-bottom: 0.4rem;
-  color: #c7cad1;
+  color: var(--text-secondary);
 }
 
 .callout-retrieved-role {
-  color: #9aa0a6;
+  color: var(--text-primary);
   font-weight: 600;
-}
-
-.resume-form textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #3a3f4b;
-  background: #1a1d24;
-  color: #e6e6e6;
-  font-size: 0.95rem;
-  font-family: inherit;
-  resize: vertical;
 }
 
 /* --- second opinion box --- */
@@ -388,16 +616,17 @@ h1 {
 .second-opinion-box {
   margin-top: 1.75rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #262a33;
+  border-top: 1px solid var(--border);
 }
 
 .second-opinion-toggle {
   padding: 0.6rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #3a3f4b;
-  background: #1a1d24;
-  color: #e6e6e6;
-  font-size: 0.9rem;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
@@ -410,13 +639,14 @@ h1 {
 .track-record {
   margin-bottom: 1.75rem;
   padding: 1rem;
-  border-radius: 8px;
-  background: #1a1d24;
-  border: 1px solid #3a3f4b;
+  border-radius: 2px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
 }
 
 .track-record-tally {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
   margin: 0.25rem 0 1rem;
 }
 
@@ -431,53 +661,256 @@ h1 {
 
 .track-record-item {
   padding: 0.6rem 0.75rem;
-  border-radius: 6px;
-  border-left: 3px solid #3a3f4b;
-  background: #12141a;
+  border-radius: 2px;
+  border-left: 3px solid var(--border-strong);
+  background: var(--bg-inset);
 }
 
 .track-record-item.resolved {
-  border-left-color: #6bff8f;
+  border-left-color: var(--evidence-blue);
 }
 
 .track-record-item.partially_resolved {
-  border-left-color: #ffd36b;
+  border-left-color: var(--warning-amber);
 }
 
 .track-record-item.unresolved {
-  border-left-color: #ff6b6b;
+  border-left-color: var(--verdict-red);
 }
 
 .track-record-status {
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
   font-weight: 700;
   margin-bottom: 0.25rem;
-  color: #9aa0a6;
+  color: var(--text-secondary);
 }
 
 .track-record-claim {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 700;
   margin-bottom: 0.25rem;
 }
 
 .track-record-note {
-  color: #c7cad1;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
+/* --- verdict stamp (animated weakest-point reveal, Repo only) --- */
+
+.weakest.verdict-stamp-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+.verdict-stamp-flash {
+  position: absolute;
+  inset: 0;
+  background: var(--verdict-red);
+  pointer-events: none;
+}
+
+.verdict-stamp {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.35rem 0.7rem;
+  border: 3px solid var(--verdict-red);
+  border-radius: 2px;
+}
+
+.verdict-decode-text {
+  min-height: 1.6em;
+}
+
+/* --- confidence flip badge (3D signature element) --- */
+
+.confidence-flip-wrap {
+  display: inline-block;
+  perspective: 400px;
+  width: 4.5rem;
+  height: 2rem;
+  vertical-align: middle;
+}
+
+.confidence-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.confidence-flip-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  border-radius: 2px;
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.confidence-flip-front {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.confidence-flip-back {
+  background: var(--bg-inset);
+  transform: rotateY(180deg);
+}
+
+.confidence-flip-back.confidence-flip-high {
+  color: var(--evidence-blue);
+  border-color: var(--evidence-blue);
+}
+
+.confidence-flip-back.confidence-flip-low {
+  color: var(--verdict-red);
+  border-color: var(--verdict-red);
+}
+
+/* --- loading scanner --- */
+
+.loading-scanner {
+  margin: 2rem 0;
+}
+
+.loading-scanner-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--verdict-red);
+  margin-bottom: 0.75rem;
+  animation: scanner-blink 1.2s steps(1) infinite;
+}
+
+.loading-scanner-frame {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+}
+
+.loading-scanner-row {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.loading-scanner-row:last-child {
+  border-bottom: none;
+}
+
+.loading-scanner-bar {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: transparent;
+  background: var(--border-strong);
+  border-radius: 2px;
+  padding: 0 0.3rem;
+  animation: scanner-develop 1.8s ease-in-out infinite;
+}
+
+.loading-scanner-sweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--verdict-red);
+  box-shadow: 0 0 12px 2px var(--verdict-red);
+}
+
+@keyframes scanner-develop {
+  0%,
+  85%,
+  100% {
+    color: transparent;
+    background: var(--border-strong);
+  }
+  15%,
+  35% {
+    color: var(--text-primary);
+    background: transparent;
+  }
+}
+
+@keyframes scanner-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-scanner-label,
+  .loading-scanner-bar {
+    animation: none;
+  }
+  .loading-scanner-bar {
+    color: var(--text-primary);
+    background: transparent;
+  }
+  .loading-scanner-sweep {
+    display: none;
+  }
+}
+
 /* --- persona --- */
+
+.persona-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.persona-selector-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.persona-jelly {
+  padding: 0.2rem !important;
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+}
+
+.persona-jelly .jelly-radio__skin {
+  font-family: var(--font-mono);
+  font-size: 0.72rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
 
 .persona-badge {
   display: inline-block;
   margin-bottom: 1rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  background: #2a1f4a;
-  color: #c8b6ff;
-  font-size: 0.75rem;
-  font-weight: 600;
+  border-radius: 2px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.06em;
 }

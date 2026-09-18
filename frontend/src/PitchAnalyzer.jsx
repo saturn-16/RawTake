@@ -3,7 +3,7 @@ import { VerdictBody } from "./components/shared.jsx";
 import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
 import { PersonaSelector, PersonaBadge } from "./components/PersonaSelector.jsx";
 
-export default function PitchAnalyzer() {
+export default function PitchAnalyzer({ onHasResultChange }) {
   const [pitchText, setPitchText] = useState("");
   const [persona, setPersona] = useState("technical");
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,10 @@ export default function PitchAnalyzer() {
       .then((data) => setPriorAnalyses(data.analyses || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    onHasResultChange?.(!!verdict);
+  }, [verdict, onHasResultChange]);
 
   async function handleSubmit(e) {
     e.preventDefault();

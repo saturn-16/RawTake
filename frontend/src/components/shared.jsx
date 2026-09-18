@@ -25,7 +25,10 @@ export function VerdictBody({ verdict, trustLabel, trustValue }) {
         <h3>Verdict</h3>
         <p>{verdict.verdict.summary}</p>
         <p>
-          <strong>{trustLabel}:</strong> {trustValue ? "Yes" : "No"}
+          {trustLabel}:{" "}
+          <span className={`trust-badge ${trustValue ? "yes" : "no"}`}>
+            {trustValue ? "Yes" : "No"}
+          </span>
         </p>
         <Confidence level={verdict.verdict.confidence} />
       </section>
@@ -44,8 +47,9 @@ export function VerdictBody({ verdict, trustLabel, trustValue }) {
           <h3>Genuine positives</h3>
           <ul>
             {verdict.positives.map((p, i) => (
-              <li key={i}>
-                {p.claim} <span className="critique-citation">({p.citation})</span>
+              <li key={i} className="positive-entry">
+                <div className="positive-claim">{p.claim}</div>
+                <div className="critique-citation">source: {p.citation}</div>
               </li>
             ))}
           </ul>

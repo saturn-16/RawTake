@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Confidence } from "./components/shared.jsx";
+import LatticeLoader from "./components/reactbits/LatticeLoader.jsx";
 
 const MODULES = [
   { key: "repo", label: "GitHub Repo", listUrl: "/api/analyze/repo", endpoint: (id) => `/api/analyze/repo/${id}/second-opinion` },
@@ -13,13 +14,14 @@ const MODULES = [
   },
 ];
 
-export default function SecondOpinionAnalyzer() {
+export default function SecondOpinionAnalyzer({ onHasResultChange }) {
   const [moduleKey, setModuleKey] = useState("repo");
   const [items, setItems] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState("");
   const [pastedResponse, setPastedResponse] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | working | done | error
+  const loading = status === "working";
   const [error, setError] = useState(null);
   const [verdict, setVerdict] = useState(null);
 
@@ -49,10 +51,14 @@ export default function SecondOpinionAnalyzer() {
       .finally(() => setItemsLoading(false));
   }, [moduleKey]);
 
+  useEffect(() => {
+    onHasResultChange?.(!!verdict);
+  }, [verdict, onHasResultChange]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!selectedId || !pastedResponse.trim()) return;
-    setLoading(true);
+    setStatus("working");
     setError(null);
     setVerdict(null);
     try {
@@ -64,10 +70,10 @@ export default function SecondOpinionAnalyzer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Comparison failed.");
       setVerdict(data.verdict);
+      setStatus("done");
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
+      setStatus("error");
     }
   }
 
@@ -113,10 +119,24 @@ export default function SecondOpinionAnalyzer() {
         />
         <div className="form">
           <button type="submit" disabled={loading || !selectedId || !pastedResponse.trim()}>
-            {loading ? "Checking against the evidence..." : "Fact-Check It"}
+            Fact-Check It
           </button>
         </div>
       </form>
+
+      {status !== "idle" && (
+        <LatticeLoader
+          status={status}
+          label="Checking"
+          doneLabel="Checked in"
+          errorLabel="Check failed after"
+          color="#f2f1ed"
+          doneColor="#3b82c4"
+          errorColor="#e0332a"
+          cellSize={6}
+          fontSize={13}
+        />
+      )}
 
       {error && <div className="error">{error}</div>}
 
