@@ -3,6 +3,7 @@ import { callGroqStructured, normalizeStringArray } from "./groqClient.js";
 
 const MODEL = "openai/gpt-oss-120b";
 
+export const PERSONA_ENUM = ["recruiter", "technical", "decision_maker"];
 const CONFIDENCE_ENUM = ["high", "medium", "low"];
 const DIMENSION_ENUM = [
   "genericness",
@@ -43,6 +44,7 @@ const PITCH_JSON_SCHEMA = {
   schema: {
     type: "object",
     properties: {
+      persona: { type: "string", enum: PERSONA_ENUM },
       weakestPoint: { type: "string" },
       verdict: {
         type: "object",
@@ -58,25 +60,27 @@ const PITCH_JSON_SCHEMA = {
       positives: { type: "array", items: POSITIVE_SCHEMA },
       comprehensionQuestions: { type: "array", items: { type: "string" } },
     },
-    required: ["weakestPoint", "verdict", "critiques", "positives", "comprehensionQuestions"],
+    required: ["persona", "weakestPoint", "verdict", "critiques", "positives", "comprehensionQuestions"],
     additionalProperties: false,
   },
 };
 
-function buildUserMessage(pitchText) {
+function buildUserMessage(pitchText, persona) {
   return `Project pitch text:
 """
 ${pitchText.slice(0, 6000)}
 """
 
+Active persona for this analysis: ${persona}
+
 Analyze this per your instructions and return only the JSON object.`;
 }
 
-export async function generatePitchVerdict(pitchText) {
+export async function generatePitchVerdict(pitchText, persona = "technical") {
   const raw = await callGroqStructured({
     model: MODEL,
     systemPrompt: PITCH_ANALYSIS_SYSTEM_PROMPT,
-    userMessage: buildUserMessage(pitchText),
+    userMessage: buildUserMessage(pitchText, persona),
     jsonSchema: PITCH_JSON_SCHEMA,
   });
   raw.comprehensionQuestions = normalizeStringArray(raw.comprehensionQuestions);

@@ -68,7 +68,7 @@ ${userMessage}
 
 The specific new claim extracted from their pushback: ${extractedClaim || "(none extracted — re-examine the message itself)"}
 
-Re-evaluate the repo taking this new evidence into account, per your instructions, and return the full revised JSON object including "changeExplanation".`;
+Re-evaluate the repo taking this new evidence into account, per your instructions, keeping the same "persona" as the previous verdict (${currentVerdict.persona}), and return the full revised JSON object including "changeExplanation".`;
 }
 
 export async function reevaluateVerdict(repoData, currentVerdict, userMessage, extractedClaim) {

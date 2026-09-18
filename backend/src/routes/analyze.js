@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { analyzeRepoData } from "../services/github.js";
-import { generateVerdict, buildRepoContextMessage } from "../services/groq.js";
+import { generateVerdict, buildRepoContextMessage, PERSONA_ENUM } from "../services/groq.js";
 import { classifyPushback, reevaluateVerdict } from "../services/dispute.js";
 import { generateSecondOpinion } from "../services/secondOpinionAnalysis.js";
 import { insertSecondOpinion } from "../db/secondOpinionRepository.js";
@@ -18,16 +18,19 @@ import {
 export const analyzeRouter = Router();
 
 analyzeRouter.post("/repo", async (req, res) => {
-  const { repoUrl } = req.body || {};
+  const { repoUrl, persona = "technical" } = req.body || {};
   if (!repoUrl || typeof repoUrl !== "string") {
     return res.status(400).json({ error: "repoUrl is required." });
+  }
+  if (!PERSONA_ENUM.includes(persona)) {
+    return res.status(400).json({ error: `persona must be one of: ${PERSONA_ENUM.join(", ")}` });
   }
 
   try {
     const priorAnalysis = findMostRecentAnalysisByRepoUrl(repoUrl);
 
     const repoData = await analyzeRepoData(repoUrl);
-    const verdict = await generateVerdict(repoData);
+    const verdict = await generateVerdict(repoData, persona);
     const analysisId = insertAnalysis({
       repoUrl,
       owner: repoData.owner,

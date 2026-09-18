@@ -21,6 +21,7 @@ db.exec(`
     owner TEXT NOT NULL,
     repo TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'active',
+    persona TEXT NOT NULL DEFAULT 'technical',
     weakest_point TEXT NOT NULL,
     verdict_summary TEXT NOT NULL,
     would_trust_for_placement INTEGER NOT NULL,
@@ -101,6 +102,13 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Migration: the `analyses` table predates the `persona` column. Plain
+// ALTER TABLE ADD COLUMN is fine here (no FK involved, unlike evidence below).
+const analysesColumns = db.prepare(`PRAGMA table_info(analyses)`).all();
+if (!analysesColumns.some((c) => c.name === "persona")) {
+  db.exec(`ALTER TABLE analyses ADD COLUMN persona TEXT NOT NULL DEFAULT 'technical'`);
+}
 
 // Migration: the `evidence` table predates the `module` column AND used to
 // declare `analysis_id INTEGER NOT NULL REFERENCES analyses(id)`. That FK is

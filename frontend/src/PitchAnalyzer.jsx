@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { VerdictBody } from "./components/shared.jsx";
 import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
+import { PersonaSelector, PersonaBadge } from "./components/PersonaSelector.jsx";
 
 export default function PitchAnalyzer() {
   const [pitchText, setPitchText] = useState("");
+  const [persona, setPersona] = useState("technical");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [verdict, setVerdict] = useState(null);
@@ -32,6 +34,7 @@ export default function PitchAnalyzer() {
         body: JSON.stringify({
           pitchText,
           compareToAnalysisId: compareToAnalysisId || undefined,
+          persona,
         }),
       });
       const data = await res.json();
@@ -78,10 +81,14 @@ export default function PitchAnalyzer() {
         </div>
       </form>
 
+      <PersonaSelector value={persona} onChange={setPersona} />
+
       {error && <div className="error">{error}</div>}
 
       {verdict && (
         <div className="result">
+          <PersonaBadge persona={verdict.persona} />
+
           <TrackRecordSummary trackRecord={trackRecord} />
 
           <VerdictBody

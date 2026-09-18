@@ -16,6 +16,7 @@ function rowToVerdict(analysisRow, evidenceRows) {
     .map((e) => ({ claim: e.claim, citation: e.citation, confidence: e.confidence }));
 
   return {
+    persona: analysisRow.persona,
     weakestPoint: analysisRow.weakest_point,
     verdict: {
       summary: analysisRow.verdict_summary,
@@ -30,9 +31,9 @@ function rowToVerdict(analysisRow, evidenceRows) {
 
 const insertAnalysisStmt = db.prepare(`
   INSERT INTO analyses
-    (repo_url, owner, repo, status, weakest_point, verdict_summary, would_trust_for_placement, confidence, comprehension_questions)
+    (repo_url, owner, repo, status, persona, weakest_point, verdict_summary, would_trust_for_placement, confidence, comprehension_questions)
   VALUES
-    (@repoUrl, @owner, @repo, @status, @weakestPoint, @verdictSummary, @wouldTrustForPlacement, @confidence, @comprehensionQuestions)
+    (@repoUrl, @owner, @repo, @status, @persona, @weakestPoint, @verdictSummary, @wouldTrustForPlacement, @confidence, @comprehensionQuestions)
 `);
 
 const insertEvidenceStmt = db.prepare(`
@@ -59,6 +60,7 @@ export function insertAnalysis({ repoUrl, owner, repo, verdict, status = "active
     owner,
     repo,
     status,
+    persona: verdict.persona || "technical",
     weakestPoint: verdict.weakestPoint,
     verdictSummary: verdict.verdict.summary,
     wouldTrustForPlacement: verdict.verdict.wouldTrustForPlacement ? 1 : 0,

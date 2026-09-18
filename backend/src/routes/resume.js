@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { PDFParse } from "pdf-parse";
-import { generateResumeVerdict } from "../services/resumeAnalysis.js";
+import { generateResumeVerdict, PERSONA_ENUM } from "../services/resumeAnalysis.js";
 import { generateSecondOpinion } from "../services/secondOpinionAnalysis.js";
 import { insertResumeAnalysis, getResumeAnalysis, listResumeAnalyses } from "../db/resumeRepository.js";
 import { insertSecondOpinion } from "../db/secondOpinionRepository.js";
@@ -50,13 +50,16 @@ resumeRouter.get("/", (_req, res) => {
 });
 
 resumeRouter.post("/", async (req, res) => {
-  const { resumeText, targetRole, compareToAnalysisId } = req.body || {};
+  const { resumeText, targetRole, compareToAnalysisId, persona = "technical" } = req.body || {};
   if (!resumeText || typeof resumeText !== "string" || !resumeText.trim()) {
     return res.status(400).json({ error: "resumeText is required." });
   }
+  if (!PERSONA_ENUM.includes(persona)) {
+    return res.status(400).json({ error: `persona must be one of: ${PERSONA_ENUM.join(", ")}` });
+  }
 
   try {
-    const verdict = await generateResumeVerdict(resumeText, targetRole);
+    const verdict = await generateResumeVerdict(resumeText, targetRole, persona);
     const analysisId = insertResumeAnalysis({ resumeText, targetRole, verdict });
 
     let trackRecord = { isRecheck: false };

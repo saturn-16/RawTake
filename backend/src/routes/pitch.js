@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generatePitchVerdict } from "../services/pitchAnalysis.js";
+import { generatePitchVerdict, PERSONA_ENUM } from "../services/pitchAnalysis.js";
 import { generateSecondOpinion } from "../services/secondOpinionAnalysis.js";
 import { insertPitchAnalysis, getPitchAnalysis, listPitchAnalyses } from "../db/pitchRepository.js";
 import { insertSecondOpinion } from "../db/secondOpinionRepository.js";
@@ -17,13 +17,16 @@ pitchRouter.get("/", (_req, res) => {
 });
 
 pitchRouter.post("/", async (req, res) => {
-  const { pitchText, compareToAnalysisId } = req.body || {};
+  const { pitchText, compareToAnalysisId, persona = "technical" } = req.body || {};
   if (!pitchText || typeof pitchText !== "string" || !pitchText.trim()) {
     return res.status(400).json({ error: "pitchText is required." });
   }
+  if (!PERSONA_ENUM.includes(persona)) {
+    return res.status(400).json({ error: `persona must be one of: ${PERSONA_ENUM.join(", ")}` });
+  }
 
   try {
-    const verdict = await generatePitchVerdict(pitchText);
+    const verdict = await generatePitchVerdict(pitchText, persona);
     const analysisId = insertPitchAnalysis({ pitchText, verdict });
 
     let trackRecord = { isRecheck: false };

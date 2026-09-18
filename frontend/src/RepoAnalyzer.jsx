@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { VerdictBody } from "./components/shared.jsx";
 import TrackRecordSummary from "./components/TrackRecordSummary.jsx";
+import { PersonaSelector, PersonaBadge } from "./components/PersonaSelector.jsx";
 
 function DisputeHistory({ disputes }) {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,7 @@ function DisputeHistory({ disputes }) {
 
 export default function RepoAnalyzer() {
   const [repoUrl, setRepoUrl] = useState("");
+  const [persona, setPersona] = useState("technical");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -62,7 +64,7 @@ export default function RepoAnalyzer() {
       const res = await fetch("/api/analyze/repo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl }),
+        body: JSON.stringify({ repoUrl, persona }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Analysis failed.");
@@ -130,11 +132,14 @@ export default function RepoAnalyzer() {
         </button>
       </form>
 
+      <PersonaSelector value={persona} onChange={setPersona} />
+
       {error && <div className="error">{error}</div>}
 
       {verdict && (
         <div className="result">
           <h2>{repoName}</h2>
+          <PersonaBadge persona={verdict.persona} />
 
           <TrackRecordSummary trackRecord={trackRecord} />
 

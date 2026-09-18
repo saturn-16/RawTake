@@ -3,6 +3,7 @@ import { callGroqStructured, normalizeStringArray } from "./groqClient.js";
 
 const MODEL = "openai/gpt-oss-120b";
 
+export const PERSONA_ENUM = ["recruiter", "technical", "decision_maker"];
 export const CONFIDENCE_ENUM = ["high", "low"];
 export const DIMENSION_ENUM = ["readme", "structure", "commits", "testing"];
 
@@ -35,6 +36,7 @@ export const POSITIVE_SCHEMA = {
 export const VERDICT_SCHEMA_SHAPE = {
   type: "object",
   properties: {
+    persona: { type: "string", enum: PERSONA_ENUM },
     weakestPoint: { type: "string" },
     verdict: {
       type: "object",
@@ -50,7 +52,7 @@ export const VERDICT_SCHEMA_SHAPE = {
     positives: { type: "array", items: POSITIVE_SCHEMA },
     comprehensionQuestions: { type: "array", items: { type: "string" } },
   },
-  required: ["weakestPoint", "verdict", "critiques", "positives", "comprehensionQuestions"],
+  required: ["persona", "weakestPoint", "verdict", "critiques", "positives", "comprehensionQuestions"],
   additionalProperties: false,
 };
 
@@ -83,17 +85,19 @@ Recent commits (hash: message):
 ${truncatedCommits.map((c) => `${c.sha}: ${c.message}`).join("\n")}`;
 }
 
-function buildAnalysisUserMessage(repoData) {
+function buildAnalysisUserMessage(repoData, persona) {
   return `${buildRepoContextMessage(repoData)}
+
+Active persona for this analysis: ${persona}
 
 Analyze this repo per your instructions and return only the JSON object.`;
 }
 
-export async function generateVerdict(repoData) {
+export async function generateVerdict(repoData, persona = "technical") {
   const raw = await callGroqStructured({
     model: MODEL,
     systemPrompt: REPO_ANALYSIS_SYSTEM_PROMPT,
-    userMessage: buildAnalysisUserMessage(repoData),
+    userMessage: buildAnalysisUserMessage(repoData, persona),
     jsonSchema: VERDICT_JSON_SCHEMA,
   });
   raw.comprehensionQuestions = normalizeStringArray(raw.comprehensionQuestions);
