@@ -1,6 +1,6 @@
 import { CALLOUT_SYSTEM_PROMPT } from "../prompts/calloutPrompt.js";
 import { callGroqChat } from "./groqClient.js";
-import { embedText } from "./voyage.js";
+import { tryEmbedText } from "./voyage.js";
 import {
   insertMessage,
   getMessagesForConversation,
@@ -44,12 +44,15 @@ export async function sendCalloutMessage(conversationId, userText) {
   // measured it and retrieval quality got noticeably worse: unrelated
   // messages landed at distances overlapping genuinely relevant ones, so no
   // fixed threshold could separate them. Keeping the asymmetric query/
-  // document split and relying on embedText's own retry/backoff for the
-  // rate limit instead.
-  const queryEmbedding = await embedText(userText, "query");
-  const retrieved = searchSimilarMessages(queryEmbedding, { limit: 8 });
+  // document split. When Voyage rate limits us, embeddings are skipped
+  // (tryEmbedText returns null) so the reply still goes out, just without
+  // recall for that turn.
+  const queryEmbedding = await tryEmbedText(userText, "query");
+  const retrieved = queryEmbedding
+    ? searchSimilarMessages(queryEmbedding, { limit: 8 })
+    : [];
 
-  const userDocEmbedding = await embedText(userText, "document");
+  const userDocEmbedding = await tryEmbedText(userText, "document");
   insertMessage({
     conversationId,
     role: "user",
@@ -70,7 +73,7 @@ export async function sendCalloutMessage(conversationId, userText) {
     messages: history,
   });
 
-  const replyEmbedding = await embedText(reply, "document");
+  const replyEmbedding = await tryEmbedText(reply, "document");
   insertMessage({
     conversationId,
     role: "assistant",

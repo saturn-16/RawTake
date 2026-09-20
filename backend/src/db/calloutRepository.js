@@ -67,7 +67,9 @@ export function setConversationTitle(id, title) {
 }
 
 export function insertMessage({ conversationId, role, content, embedding }) {
-  const buf = embeddingToBuffer(embedding);
+  // A null embedding (embedding call failed or was rate limited) still stores
+  // the message for conversation history; it just won't be found by recall.
+  const buf = embedding ? embeddingToBuffer(embedding) : null;
   const info = insertMessageStmt.run({
     conversationId,
     role,
@@ -75,7 +77,7 @@ export function insertMessage({ conversationId, role, content, embedding }) {
     embedding: buf,
   });
   const messageId = Number(info.lastInsertRowid);
-  insertVecStmt.run(BigInt(messageId), buf);
+  if (buf) insertVecStmt.run(BigInt(messageId), buf);
   return messageId;
 }
 
