@@ -20,6 +20,7 @@ export async function embedText(text, inputType) {
       model: MODEL,
       input_type: inputType,
     }),
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!res.ok) {
